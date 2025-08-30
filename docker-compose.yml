@@ -1,0 +1,24 @@
+services:
+  # === PostgreSQL ===
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_DB: manage_debs_db
+      POSTGRES_USER: admin_user
+      POSTGRES_PASSWORD: jhon.123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      # (opcional) SQLs de inicio:
+      - ./pginit:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin_user -d manage_debs_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pg_data:
