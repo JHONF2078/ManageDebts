@@ -1,4 +1,5 @@
-﻿using ManageDebts.Application.Common.Interfaces;
+﻿using System.Text;
+using ManageDebts.Application.Common.Interfaces;
 using ManageDebts.Infrastructure.Auth;
 using ManageDebts.Infrastructure.Auth.Options;
 using ManageDebts.Infrastructure.Identity;
@@ -10,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 namespace ManageDebts.Infrastructure
 {
@@ -18,9 +18,16 @@ namespace ManageDebts.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
         {
-            // DbContext (PostgreSQL)
+            // DbContext (PostgreSQL) usando variables de entorno
+            var host = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+            var port = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
+            var db = Environment.GetEnvironmentVariable("DB_NAME") ?? "manage_debs_db";
+            var user = Environment.GetEnvironmentVariable("DB_USER") ?? "admin_user";
+            var password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "jhon.123";
+            var connectionString = $"Host={host};Port={port};Database={db};Username={user};Password={password}";
+
             services.AddDbContext<AppDbContext>(opt =>
-                opt.UseNpgsql(config.GetConnectionString("DefaultConnection")));
+                opt.UseNpgsql(connectionString));
 
             // Identity
             services.AddIdentityCore<ApplicationUser>(o =>
