@@ -25,7 +25,7 @@ export class LoginComponent {
       this.authService.setToken(data.token);
       this.router.navigate(['/debts']);
     } catch (err: any) {
-      this.error = err.message;
+      this.error = err?.error?.detail || err.message;
     }
   }
 }

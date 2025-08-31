@@ -27,7 +27,6 @@ namespace ManageDebts.Application.Debts
 
             debt.Amount = cmd.Amount;
             debt.Description = cmd.Description;
-            debt.CreditorId = cmd.CreditorId;
             await _repo.UpdateAsync(debt);
             return Result<Debt>.Success(debt);
         }

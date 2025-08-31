@@ -17,13 +17,13 @@ export class RegisterComponent {
   fullName = '';
   password = '';
   confirmPassword = '';
-  error = '';
+  errorMessages: string[] = [];
 
   constructor(private router: Router, private authService: AuthService) { }
 
   async register() {
     if (this.password !== this.confirmPassword) {
-      this.error = 'Las contraseñas no coinciden';
+      this.errorMessages = ['Las contraseñas no coinciden'];
       return;
     }
     try {
@@ -31,7 +31,8 @@ export class RegisterComponent {
       this.authService.setToken(data.token);
       this.router.navigate(['/']);
     } catch (err: any) {
-      this.error = err.message;
+      const detail = err?.error?.detail || err.message;
+      this.errorMessages = detail.split(' | ');
     }
   }
 }
