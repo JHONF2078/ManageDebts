@@ -6,6 +6,6 @@ namespace ManageDebts.Infrastructure.Identity
     {       
         public string? RefreshTokenHash { get; set; }
         public DateTime? RefreshTokenExpiresUtc { get; set; }
+        public string FullName { get; set; } = string.Empty;
     }
-
 }

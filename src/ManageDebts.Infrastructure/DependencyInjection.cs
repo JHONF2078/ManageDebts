@@ -3,6 +3,7 @@ using ManageDebts.Infrastructure.Auth;
 using ManageDebts.Infrastructure.Auth.Options;
 using ManageDebts.Infrastructure.Identity;
 using ManageDebts.Infrastructure.Persistence;
+using ManageDebts.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -60,10 +61,19 @@ namespace ManageDebts.Infrastructure
                 };
             });
 
+            // Redis Cache
+            var redisConn = config.GetSection("Redis:ConnectionString").Value;
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConn;
+            });
+            services.AddScoped<ICacheService, RedisCacheService>();
+
             // Servicios
             services.AddScoped<IJwtService, JwtService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ManageDebts.Domain.Repositories.IDebtRepository, Repository.DebtRepository>();
+            services.AddScoped<IUserService, Services.UserService>();
 
             return services;
         }

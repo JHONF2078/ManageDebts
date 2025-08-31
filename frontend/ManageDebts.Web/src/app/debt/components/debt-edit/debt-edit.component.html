@@ -1,0 +1,23 @@
+<h2 mat-dialog-title>Editar Deuda</h2>
+<form [formGroup]="debtForm" (ngSubmit)="save()">
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Monto</mat-label>
+    <input matInput type="number" formControlName="amount" />
+  </mat-form-field>
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Descripción</mat-label>
+    <input matInput formControlName="description" />
+  </mat-form-field>
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Acreedor</mat-label>
+    <mat-select formControlName="creditorId">
+      <mat-option *ngFor="let user of users" [value]="user.id">
+        {{ user.fullName }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <div mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="onCancel()">Cancelar</button>
+    <button mat-button type="submit" [disabled]="!debtForm.valid">Guardar</button>
+  </div>
+</form>

@@ -20,6 +20,7 @@ namespace ManageDebts.Application.Debts
         public decimal Amount { get; set; }
         [Required]
         public string Description { get; set; } = string.Empty;
-        // Puedes agregar CreditorId si quieres permitir editar el acreedor
+        [Required]
+        public string CreditorId { get; set; } = string.Empty; // Acreedor
     }
 }

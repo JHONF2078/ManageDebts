@@ -2,6 +2,7 @@
 using ManageDebts.Application.Auth.Register;
 using ManageDebts.Application.Common.Interfaces;
 using ManageDebts.Application.Contracts.Auth;
+using ManageDebts.Application.Users;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,8 +17,9 @@ namespace ManageDebts.Presentation.Controllers
     {
         private readonly IMediator _mediator;
         private readonly IAuthService _auth;
-        public AccountController(IMediator mediator, IAuthService auth)
-            => (_mediator, _auth) = (mediator, auth);
+        private readonly IUserService _userService;
+        public AccountController(IMediator mediator, IAuthService auth, IUserService userService)
+            => (_mediator, _auth, _userService) = (mediator, auth, userService);
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterCommand cmd, CancellationToken ct)
@@ -47,6 +49,15 @@ namespace ManageDebts.Presentation.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             await _auth.LogoutAsync(userId, ct);
             return NoContent();
+        }
+
+        [HttpGet("users")]
+        [Authorize]
+        public async Task<IActionResult> ListUsers()
+        {
+            var handler = new ListUsersHandler(_userService);
+            var users = await handler.Handle();
+            return Ok(users);
         }
     }
 }

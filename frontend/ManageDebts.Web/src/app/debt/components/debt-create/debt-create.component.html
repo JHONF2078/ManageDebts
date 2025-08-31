@@ -1,0 +1,39 @@
+<h2 mat-dialog-title class="bg-success text-blue-600 fs-6">Nueva Deuda</h2>
+<form [formGroup]="debtForm" (ngSubmit)="saveDebt()" class="form-dialog">
+  <section class="form-section">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Monto</mat-label>
+      <input matInput type="number" formControlName="amount" />
+      <mat-error *ngIf="debtForm.get('amount')?.hasError('required')">
+        El monto es requerido
+      </mat-error>
+      <mat-error *ngIf="debtForm.get('amount')?.hasError('min')">
+        El monto debe ser mayor a 0
+      </mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Descripción</mat-label>
+      <input matInput formControlName="description" />
+      <mat-error *ngIf="debtForm.get('description')?.hasError('required')">
+        La descripción es requerida
+      </mat-error>
+    </mat-form-field>
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Acreedor</mat-label>
+      <mat-select formControlName="creditorId">
+        @for (user of users; track user) {
+        <mat-option [value]="user.value">{{ user.viewValue }}</mat-option>
+        }
+      </mat-select>
+      <mat-error *ngIf="debtForm.get('creditorId')?.hasError('required')">
+        El acreedor es requerido
+      </mat-error>
+    </mat-form-field>
+  </section>
+  <div mat-dialog-actions align="end">
+    <button class="text-success" mat-button type="button" (click)="onCancel()">CERRAR</button>
+    <button class="text-success" mat-button type="submit" [disabled]="!debtForm.valid">
+      GUARDAR
+    </button>
+  </div>
+</form>

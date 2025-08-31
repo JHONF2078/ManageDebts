@@ -1,0 +1,23 @@
+<div class="filter-container">
+  <mat-form-field appearance="fill">
+    <mat-label>Estado</mat-label>
+    <mat-select [(ngModel)]="pay" (selectionChange)="onFilterChange()">
+      <mat-option value="">Todos</mat-option>
+      <mat-option value="true">Pagados</mat-option>
+      <mat-option value="false">No pagados</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Deudor</mat-label>
+    <input matInput [(ngModel)]="debtor" (input)="onFilterChange()" placeholder="Buscar deudor" />
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Acreedor</mat-label>
+    <input
+      matInput
+      [(ngModel)]="creditor"
+      (input)="onFilterChange()"
+      placeholder="Buscar acreedor"
+    />
+  </mat-form-field>
+</div>

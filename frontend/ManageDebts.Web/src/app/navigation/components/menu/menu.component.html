@@ -1,0 +1,35 @@
+<mat-nav-list class="sidebar-list">
+  <mat-list-item [routerLink]="'/orders'" routerLinkActive="active-link" (click)="handleClick()">
+    <mat-icon>menu_book</mat-icon>
+    <span class="menu-text">Debts</span>
+  </mat-list-item>
+
+  <!-- <mat-list-item [routerLink]="'/graphic-d3'" routerLinkActive="active-link" (click)="handleClick()">
+    <mat-icon>bar_chart</mat-icon>
+    <span class="menu-text">Gráfica</span>
+  </mat-list-item> -->
+
+  <ng-container *ngIf="!hasToken">
+    <mat-list-item [routerLink]="'/login'" routerLinkActive="active-link" (click)="handleClick()">
+      <mat-icon>login</mat-icon>
+      <span class="menu-text">Login</span>
+    </mat-list-item>
+    <mat-list-item
+      [routerLink]="'/register'"
+      routerLinkActive="active-link"
+      (click)="handleClick()"
+    >
+      <mat-icon>person_add</mat-icon>
+      <span class="menu-text">Register</span>
+    </mat-list-item>
+  </ng-container>
+
+  <ng-container *ngIf="hasToken">
+    <mat-list-item (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      <span class="menu-text">Logout</span>
+    </mat-list-item>
+  </ng-container>
+
+  <div class="spacer"></div>
+</mat-nav-list>

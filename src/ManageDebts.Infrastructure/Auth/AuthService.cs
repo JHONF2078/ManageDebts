@@ -35,7 +35,8 @@ namespace ManageDebts.Infrastructure.Auth
             var user = new ApplicationUser
             {
                 Email = cmd.Email,
-                UserName = cmd.Email
+                UserName = cmd.Email,
+                FullName = cmd.FullName
              
             };
 

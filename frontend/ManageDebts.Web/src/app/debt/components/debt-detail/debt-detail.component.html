@@ -1,0 +1,13 @@
+<div *ngIf="loading" class="debt-detail-loading">Cargando detalle...</div>
+<div *ngIf="error" class="debt-detail-error">{{ error }}</div>
+<div *ngIf="debt && !loading" class="debt-detail-content">
+  <h2>Detalle de la deuda</h2>
+  <p><strong>ID:</strong> {{ debt.id }}</p>
+  <p><strong>Deudor:</strong> {{ debt.debtorName }}</p>
+  <p><strong>Acreedor:</strong> {{ debt.creditorName }}</p>
+  <p><strong>Monto:</strong> {{ debt.amount | number : '1.0-0' }}</p>
+  <p><strong>Descripción:</strong> {{ debt.description }}</p>
+  <p><strong>Fecha de creación:</strong> {{ debt.createdAt | date : 'short' }}</p>
+  <p><strong>Pagada:</strong> {{ debt.isPaid ? 'Sí' : 'No' }}</p>
+  <button mat-button (click)="close()">Cerrar</button>
+</div>

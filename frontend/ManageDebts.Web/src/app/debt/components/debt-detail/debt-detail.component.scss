@@ -1,0 +1,29 @@
+.debt-detail-loading {
+  text-align: center;
+  padding: 2rem;
+}
+
+.debt-detail-error {
+  color: red;
+  text-align: center;
+  padding: 2rem;
+}
+
+.debt-detail-content {
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.debt-detail-content h2 {
+  margin-top: 0;
+}
+
+.debt-detail-content p {
+  margin: 0.5rem 0;
+}
+
+button[mat-button] {
+  margin-top: 1.5rem;
+}
