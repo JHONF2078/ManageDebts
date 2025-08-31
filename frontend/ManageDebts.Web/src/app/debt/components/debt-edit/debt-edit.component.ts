@@ -49,8 +49,10 @@ export class DebtEditComponent {
           });
           this.dialogRef.close(created);
         },
-        error: () => {
-          this.snackBar.open('Error al Editar la deuda', 'Cerrar', {
+        error: (err) => {
+          const msg = err?.error || 'Error al Editar la deuda';
+
+          this.snackBar.open(msg, 'Cerrar', {
             duration: 3000,
             verticalPosition: 'top',
             horizontalPosition: 'center'

@@ -21,7 +21,10 @@ export class DebtDeleteComponent {
   delete(): void {
     this.debtService.deleteDebt(this.data.id).subscribe({
       next: (result) => this.dialogRef.close(result),
-      error: () => alert('Error al eliminar la deuda')
+      error: (err) => {
+        const msg = err?.error || 'Error al eliminar la deuda';
+        alert(msg);
+      }
     });
   }
 

@@ -23,7 +23,7 @@ export class LoginComponent {
     try {
       const data = await this.authService.login(this.username, this.password);
       this.authService.setToken(data.token);
-      this.router.navigate(['/']);
+      this.router.navigate(['/debts']);
     } catch (err: any) {
       this.error = err.message;
     }

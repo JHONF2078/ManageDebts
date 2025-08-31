@@ -37,11 +37,6 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     const token = localStorage.getItem('token');
-    const exp = localStorage.getItem('token_exp');
-    if (!token || !exp) return false;
-    // expirationUtc viene en formato ISO UTC
-    const nowUtc = new Date(new Date().toISOString());
-    const expiration = new Date(exp);
-    return expiration.getTime() > nowUtc.getTime();
+    return !!token;
   }
 }
