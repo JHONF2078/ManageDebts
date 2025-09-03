@@ -1,16 +1,17 @@
-﻿using System.Text;
-using ManageDebts.Application.Common.Interfaces;
+﻿using ManageDebts.Application.Common.Interfaces;
 using ManageDebts.Infrastructure.Auth;
 using ManageDebts.Infrastructure.Auth.Options;
 using ManageDebts.Infrastructure.Identity;
 using ManageDebts.Infrastructure.Persistence;
 using ManageDebts.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace ManageDebts.Infrastructure
 {
@@ -66,6 +67,21 @@ namespace ManageDebts.Infrastructure
                     IssuerSigningKey = key,
                     ClockSkew = TimeSpan.Zero
                     //ValidateLifetime = true,
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        if (context.Exception is SecurityTokenExpiredException)
+                        {
+                            context.Response.StatusCode = 401;
+                            context.Response.ContentType = "application/json";
+                            var result = System.Text.Json.JsonSerializer.Serialize(new { detail = "Token expired" });
+                            return context.Response.WriteAsync(result);
+                        }
+                        return Task.CompletedTask;
+                    }
                 };
             });
 

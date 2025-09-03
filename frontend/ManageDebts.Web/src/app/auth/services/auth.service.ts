@@ -37,6 +37,19 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     const token = localStorage.getItem('token');
-    return !!token;
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      // Si el token tiene campo exp (segundos desde epoch)
+      if (payload.exp) {
+        const now = Math.floor(Date.now() / 1000);
+        const expDate = new Date(payload.exp * 1000);
+        const nowDate = new Date(now * 1000);
+        console.log('Expiración:', expDate.toISOString(), 'Actual:', nowDate.toISOString());
+        return payload.exp > now;
+      }
+    } catch { }
+    // Si no tiene exp, solo verifica existencia
+    return true;
   }
 }
