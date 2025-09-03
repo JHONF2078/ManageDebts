@@ -1,6 +1,10 @@
+using FluentValidation;
+using MediatR;
+using ManageDebts.Presentation.Filters;
 using ManageDebts.Application;
 using ManageDebts.Infrastructure;
 using ManageDebts.Infrastructure.Persistence;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -15,7 +19,10 @@ builder.Services.AddCors(options =>
                         .AllowAnyMethod());
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<GlobalExceptionFilter>();
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -47,7 +54,8 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-
+builder.Services.AddValidatorsFromAssemblyContaining<ManageDebts.Application.Debts.Commands.EditDebtCommandValidator>();
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 var app = builder.Build();
 

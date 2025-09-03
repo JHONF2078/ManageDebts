@@ -1,4 +1,5 @@
 // Application/Debts/Queries/GetDetail/GetDebtDetailHandler.cs
+using ManageDebts.Application.Common.Exceptions;
 using ManageDebts.Application.Common.Interfaces;
 using ManageDebts.Domain.Repositories;
 using MediatR;
@@ -23,7 +24,10 @@ public sealed class GetDebtDetaiQuerylHandler
 
         // 2) BD
         var debt = await _repo.GetByIdAsync(q.Id, ct);
-        if (debt is null || debt.UserId != q.UserId) return null; // seguridad: solo dueño
+        if (debt is null)
+            throw new NotFoundException($"Deuda no encontrada (id: {q.Id})");
+        if (debt.UserId != q.UserId)
+            throw new NotFoundException("No tienes acceso a esta deuda.");
 
         // 3) Enriquecer
         var debtorName = await _users.GetFullNameAsync(debt.UserId, ct);

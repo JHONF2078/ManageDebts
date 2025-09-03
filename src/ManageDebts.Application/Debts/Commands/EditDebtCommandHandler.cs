@@ -1,5 +1,6 @@
 using MediatR;
 using ManageDebts.Application.Common;
+using ManageDebts.Application.Common.Exceptions;
 using ManageDebts.Domain.Entities;
 using ManageDebts.Domain.Repositories;
 
@@ -15,11 +16,9 @@ public sealed class EditDebtHandler
     {
         var debt = await _repo.GetByIdAsync(cmd.Id, ct);
         if (debt is null || debt.UserId != cmd.UserId)
-            return Result<Debt>.Failure("Deuda no encontrada.");
+            throw new NotFoundException("Deuda no encontrada.");
         if (debt.IsPaid)
             return Result<Debt>.Failure("No se puede modificar una deuda pagada.");
-        if (cmd.Amount <= 0)
-            return Result<Debt>.Failure("El monto debe ser positivo.");
 
         debt.Amount = cmd.Amount;
         debt.Description = cmd.Description;

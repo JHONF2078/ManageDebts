@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="8.6.3" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="8.6.3" />
     <PackageReference Include="MediatR" Version="12.4.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.19">
       <PrivateAssets>all</PrivateAssets>
@@ -18,10 +20,6 @@
   <ItemGroup>
     <ProjectReference Include="..\ManageDebts.Application\ManageDebts.Application.csproj" />
     <ProjectReference Include="..\ManageDebts.Infrastructure\ManageDebts.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Filters\" />
   </ItemGroup>
 
 </Project>

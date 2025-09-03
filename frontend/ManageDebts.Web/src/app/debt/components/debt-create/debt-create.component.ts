@@ -58,8 +58,9 @@ export class DebtCreateComponent implements OnInit {
           });
           this.dialogRef.close(created);
         },
-        error: (error) => {
-          this.snackBar.open('Error al crear la deuda', 'Cerrar', {
+        error: (err) => {
+          const msg = err?.error || 'Error al Crear la deuda';
+          this.snackBar.open(msg, 'Cerrar', {
             duration: 3000,
             verticalPosition: 'top',
             horizontalPosition: 'center'
