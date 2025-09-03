@@ -1,5 +1,5 @@
-﻿using ManageDebts.Application.Auth.Login;
-using ManageDebts.Application.Auth.Register;
+﻿using ManageDebts.Application.Auth.Login.Commands;
+using ManageDebts.Application.Auth.Register.Commands;
 using ManageDebts.Application.Common;
 using ManageDebts.Application.Common.Interfaces;
 using ManageDebts.Application.Contracts.Auth;

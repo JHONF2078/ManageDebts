@@ -38,9 +38,9 @@ export class DebtCreateComponent implements OnInit {
 
   ngOnInit() {
 
-    this.usersService.getUsers().subscribe(users => {
+    this.usersService.getUsers().subscribe((users: any[]) => {
       //this.users = users.map(user => ({ value: user.id, viewValue: user.fullName }));
-      this.users = users.map(users => {
+      this.users = users.map((users: { id: any; fullName: any; }) => {
         return { value: users.id, viewValue: `${users.fullName}` };
       });
     });
@@ -50,7 +50,7 @@ export class DebtCreateComponent implements OnInit {
     if (this.debtForm.valid) {
       const debt: CreateDebtDto = this.debtForm.value;
       this.debtService.createDebt(debt).subscribe({
-        next: (created) => {
+        next: (created: any) => {
           this.snackBar.open('Deuda creada exitosamente!', 'Cerrar', {
             duration: 3000,
             verticalPosition: 'top',
@@ -58,7 +58,7 @@ export class DebtCreateComponent implements OnInit {
           });
           this.dialogRef.close(created);
         },
-        error: () => {
+        error: (error) => {
           this.snackBar.open('Error al crear la deuda', 'Cerrar', {
             duration: 3000,
             verticalPosition: 'top',

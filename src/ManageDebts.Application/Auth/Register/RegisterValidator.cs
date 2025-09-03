@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using ManageDebts.Application.Auth.Register.Commands;
 
 
 namespace ManageDebts.Application.Auth.Register

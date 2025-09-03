@@ -65,6 +65,7 @@ namespace ManageDebts.Infrastructure
                     ValidAudience = jwt.Audience,
                     IssuerSigningKey = key,
                     ClockSkew = TimeSpan.Zero
+                    //ValidateLifetime = true,
                 };
             });
 

@@ -1,9 +1,15 @@
-using ManageDebts.Application.Debts;
-using ManageDebts.Domain.Repositories;
 using ManageDebts.Application.Common.Interfaces;
+using ManageDebts.Application.Debts.Commands;
+using ManageDebts.Application.Debts.Queries;
+using ManageDebts.Domain.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 using System.Security.Claims;
+using System.Text;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ManageDebts.Presentation.Controllers
 {
@@ -15,20 +21,22 @@ namespace ManageDebts.Presentation.Controllers
         private readonly IDebtRepository _repo;
         private readonly IUserService _userService;
         private readonly ICacheService _cache;
-        public DebtsController(IDebtRepository repo, IUserService userService, ICacheService cache)
+        private readonly IMediator _mediator;
+        public DebtsController(IMediator mediator, IDebtRepository repo, IUserService userService, ICacheService cache)
         {
             _repo = repo;
             _userService = userService;
             _cache = cache;
+            _mediator = mediator;
         }
 
         private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateDebtCommand cmd, CancellationToken ct)
-        {
-            var handler = new CreateDebtHandler(_repo);
-            var result = await handler.Handle(cmd, GetUserId(), ct);
+        {          
+            var command = cmd with { UserId = GetUserId() };
+            var result = await _mediator.Send(command, ct);
             if (!result.IsSuccess) return BadRequest(result.Error);
             return Ok(result.Value);
         }
@@ -36,71 +44,94 @@ namespace ManageDebts.Presentation.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Edit(Guid id, [FromBody] EditDebtCommand cmd, CancellationToken ct)
         {
-            cmd.Id = id;
-            var handler = new EditDebtHandler(_repo);
-            var result = await handler.Handle(cmd, GetUserId(), ct);
-            if (!result.IsSuccess) return BadRequest(result.Error);
-            return Ok(result.Value);
+            // completamos datos que no vienen en el body
+            var command = cmd with { Id = id, UserId = GetUserId() };
+
+            var result = await _mediator.Send(command, ct);
+            return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
         {
-            var handler = new DeleteDebtHandler(_repo);
-            var success = await handler.Handle(id, GetUserId());
-            if (!success) return BadRequest("No se puede eliminar la deuda (no existe o está pagada)");
+            var cmd = new DeleteDebtCommand(id, GetUserId());
+            var result = await _mediator.Send(cmd, ct);
+
+            if (!result.IsSuccess)
+                return BadRequest(result.Error); // si prefieres, puedes mapear a NotFound/Forbidden
+
             return NoContent();
         }
 
-        [HttpPost("{id}/pay")]
+
+         [HttpPost("{id}/pay")]
         public async Task<IActionResult> Pay(Guid id, CancellationToken ct)
         {
-            var handler = new PayDebtHandler(_repo);
-            var result = await handler.Handle(id, GetUserId(), ct);
+            var cmd = new PayDebtCommand(id, GetUserId());
+            var result = await _mediator.Send(cmd, ct);
+
             if (!result.IsSuccess) return BadRequest(result.Error);
             return Ok(result.Value);
         }
 
+
         [HttpGet]
-        public async Task<IActionResult> List([FromQuery] bool? isPaid)
+        public async Task<IActionResult> List([FromQuery] bool? isPaid, CancellationToken ct)
         {
-            var handler = new ListDebtsHandler(_repo, _userService);
-            var result = await handler.Handle(GetUserId(), isPaid);
+            var query = new ListDebtsQuery(GetUserId(), isPaid);
+            var result = await _mediator.Send(query, ct);
             return Ok(result);
         }
 
-        
+
         [HttpGet("export")]
-        public async Task<IActionResult> Export([FromQuery] string format = "json")
+        public async Task<IActionResult> Export([FromQuery] string format = "json", [FromQuery] bool? isPaid = null, CancellationToken ct = default)
         {
-            var handler = new ListDebtsHandler(_repo, _userService);
-            var debts = await handler.Handle(GetUserId());
-            if (format.ToLower() == "csv")
+            var debts = await _mediator.Send(new ListDebtsQuery(GetUserId(), isPaid), ct);
+
+            if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
             {
-                var csv = string.Join("\n", debts.Select(d => $"{d.Id},{d.Amount},{d.Description},{d.IsPaid},{d.CreatedAt},{d.PaidAt},{d.DebtorName},{d.CreditorName}"));
-                return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv", "deudas.csv");
+                // Helper local para CSV
+                static string Csv(string? s) => s is null ? "" : $"\"{s.Replace("\"", "\"\"")}\"";
+
+                var sb = new StringBuilder();
+                sb.AppendLine("Id,Amount,Description,IsPaid,CreatedAt,PaidAt,DebtorName,CreditorId,CreditorName");
+
+                foreach (var d in debts)
+                {
+                    var amount = d.Amount.ToString(CultureInfo.InvariantCulture);
+                    var createdAt = d.CreatedAt.ToString("O", CultureInfo.InvariantCulture);  // ISO 8601
+                    var paidAt = d.PaidAt?.ToString("O", CultureInfo.InvariantCulture) ?? "";
+
+                    sb.AppendLine($"{d.Id},{amount},{Csv(d.Description)},{d.IsPaid},{createdAt},{paidAt},{Csv(d.DebtorName)},{Csv(d.CreditorId)},{Csv(d.CreditorName)}");
+                }
+
+                return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", "deudas.csv");
             }
+
             return Ok(debts);
         }
 
-        
         [HttpGet("summary")]
-        public async Task<IActionResult> Summary()
+        public async Task<IActionResult> Summary([FromQuery] bool? isPaid = null, CancellationToken ct = default)
         {
-            var handler = new ListDebtsHandler(_repo, _userService);
-            var debts = await handler.Handle(GetUserId());
+            var debts = await _mediator.Send(new ListDebtsQuery(GetUserId(), isPaid), ct);
+
             var totalPagadas = debts.Where(d => d.IsPaid).Sum(d => d.Amount);
             var saldoPendiente = debts.Where(d => !d.IsPaid).Sum(d => d.Amount);
-            return Ok(new { totalPagadas, saldoPendiente });
+
+            return Ok(new { totalPagadas, saldoPendiente, total = totalPagadas + saldoPendiente });
         }
 
+
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetDetail(Guid id)
+        public async Task<IActionResult> GetDetail(Guid id, CancellationToken ct)
         {
-            var handler = new GetDebtDetailHandler(_repo, _userService, _cache);
-            var result = await handler.Handle(id);
-            if (result == null) return NotFound();
-            return Ok(result);
+            var query = new GetDebtDetailQuery(id, GetUserId()); // incluimos el UserId
+            var dto = await _mediator.Send(query, ct);
+
+            if (dto is null) return NotFound();
+            return Ok(dto);
         }
     }
 }

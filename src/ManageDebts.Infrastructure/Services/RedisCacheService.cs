@@ -1,43 +1,34 @@
-using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Distributed;
 using ManageDebts.Application.Common.Interfaces;
-using System.Collections.Generic;
 using ManageDebts.Application.Debts;
 
-namespace ManageDebts.Infrastructure.Services
+public sealed class RedisCacheService : ICacheService
 {
-    public class RedisCacheService : ICacheService
+    private readonly IDistributedCache _cache;
+    private static readonly DistributedCacheEntryOptions DefaultOptions = new()
     {
-        private readonly IDistributedCache _cache;
-        public RedisCacheService(IDistributedCache cache)
-        {
-            _cache = cache;
-        }
-                
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(1),
+        SlidingExpiration = TimeSpan.FromMinutes(5)
+    };
 
-        public async Task SetDebtDetailAsync(string debtId, DebtDto debt)
-        {
-            var key = $"debt:{debtId}";
-            var data = JsonSerializer.Serialize(debt);
-            var options = new DistributedCacheEntryOptions
-            {
-                //la cache de la deuda se guarda por 1 dia
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5), 
-                //si nadie lo consulta durante un  5 minutos,  se borrra
-                //si alguien consulta antes de los 5 minutos,
-                //renueva por otros 5 minutos  a partir del ultimo acceso
-                SlidingExpiration = TimeSpan.FromMinutes(5) 
-            };
-            await _cache.SetStringAsync(key, data, options);
-        }
+    public RedisCacheService(IDistributedCache cache) => _cache = cache;
 
-        public async Task<DebtDto?> GetDebtDetailAsync(string debtId)
-        {
-            var key = $"debt:{debtId}";
-            var data = await _cache.GetStringAsync(key);
-            if (string.IsNullOrEmpty(data)) return null;
-            return JsonSerializer.Deserialize<DebtDto>(data);
-        }
+    public Task SetDebtDetailAsync(string debtId, DebtDto debt, CancellationToken ct = default)
+    {
+        var key = Key(debtId);
+        var data = JsonSerializer.Serialize(debt);
+        return _cache.SetStringAsync(key, data, DefaultOptions, ct);
     }
+
+    public async Task<DebtDto?> GetDebtDetailAsync(string debtId, CancellationToken ct = default)
+    {
+        var data = await _cache.GetStringAsync(Key(debtId), ct);
+        return string.IsNullOrEmpty(data) ? null : JsonSerializer.Deserialize<DebtDto>(data);
+    }
+
+    public Task RemoveDebtDetailAsync(string debtId, CancellationToken ct = default)
+        => _cache.RemoveAsync(Key(debtId), ct);
+
+    private static string Key(string debtId) => $"debt:{debtId}";
 }

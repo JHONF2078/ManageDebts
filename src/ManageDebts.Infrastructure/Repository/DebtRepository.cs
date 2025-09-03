@@ -13,38 +13,49 @@ namespace ManageDebts.Infrastructure.Repository
             _db = db;
         }
 
-        public async Task<Debt?> GetByIdAsync(Guid id)
+        public async Task<Debt?> GetByIdAsync(Guid id, CancellationToken ct)
         {
-            return await _db.Debts.FindAsync(id);
+            // return await _db.Debts.FindAsync(id);
+            // Busca por PK; si ya está trackeada evita ir a la BD
+            return await _db.Debts.FindAsync(new object?[] { id }, ct);
         }
 
-        public async Task<IEnumerable<Debt>> GetByUserAsync(string userId, bool? isPaid = null)
+        public async Task<IReadOnlyList<Debt>> GetByUserAsync(
+         string userId,
+         bool? isPaid = null,
+         CancellationToken ct = default)
         {
-            var query = _db.Debts.AsQueryable().Where(d => d.UserId == userId);
+            var query = _db.Debts
+                .AsNoTracking()                 // mejora performance en lecturas
+                .Where(d => d.UserId == userId);
+
             if (isPaid.HasValue)
                 query = query.Where(d => d.IsPaid == isPaid.Value);
-            return await query.ToListAsync();
+
+            return await query
+                .OrderByDescending(d => d.CreatedAt) // opcional: orden consistente
+                .ToListAsync(ct);
         }
 
-        public async Task AddAsync(Debt debt)
+        public async Task AddAsync(Debt debt, CancellationToken ct = default)
         {
-            _db.Debts.Add(debt);
-            await _db.SaveChangesAsync();
+            await _db.Debts.AddAsync(debt, ct);
+            await _db.SaveChangesAsync(ct);
         }
 
-        public async Task UpdateAsync(Debt debt)
+        public Task UpdateAsync(Debt debt, CancellationToken ct = default)
         {
-            _db.Debts.Update(debt);
-            await _db.SaveChangesAsync();
+            // 'debt' ya está adjunta y con cambios detectados
+            return _db.SaveChangesAsync(ct);
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id, CancellationToken ct = default)
         {
-            var debt = await _db.Debts.FindAsync(id);
-            if (debt != null)
+            var debt = await _db.Debts.FindAsync([id], ct);
+            if (debt is not null)
             {
                 _db.Debts.Remove(debt);
-                await _db.SaveChangesAsync();
+                await _db.SaveChangesAsync(ct);
             }
         }
     }

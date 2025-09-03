@@ -15,4 +15,10 @@
     <ProjectReference Include="..\ManageDebts.Domain\ManageDebts.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Auth\Login\Queries\" />
+    <Folder Include="Auth\Register\Queries\" />
+    <Folder Include="Validations\" />
+  </ItemGroup>
+
 </Project>

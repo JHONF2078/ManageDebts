@@ -6,7 +6,7 @@ namespace ManageDebts.Application.Common.Interfaces
 {
     public interface IUserService
     {
-        Task<string> GetFullNameAsync(string userId);
-        Task<IEnumerable<UserShortDto>> GetAllUsersAsync();
+        Task<string> GetFullNameAsync(string userId, CancellationToken ct = default);
+        Task<IReadOnlyList<UserShortDto>> GetAllUsersAsync(CancellationToken ct = default);
     }
 }
