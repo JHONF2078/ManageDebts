@@ -37,12 +37,11 @@ namespace ManageDebts.Infrastructure.Auth
                 Email = cmd.Email,
                 UserName = cmd.Email,
                 FullName = cmd.FullName
-             
             };
 
             var res = await _users.CreateAsync(user, cmd.Password);
             if (!res.Succeeded)
-                return Result<AuthenticationResponse>.Failure(string.Join(" | ", res.Errors.Select(e => e.Description)));
+                return Result<AuthenticationResponse>.Failure(string.Join(" | ", res.Errors.Select(e => e.Description)), ErrorType.Validation);
 
             var roles = await _users.GetRolesAsync(user);
             var auth = _jwt.CreateJwtToken(user.Id, user.Email!, roles);
@@ -55,11 +54,11 @@ namespace ManageDebts.Infrastructure.Auth
         {
             var user = await _users.FindByEmailAsync(cmd.Email);
             if (user is null)
-                return Result<AuthenticationResponse>.Failure("User not found");
+                return Result<AuthenticationResponse>.Failure("User not found", ErrorType.NotFound);
 
             var passwordValid = await _users.CheckPasswordAsync(user, cmd.Password);
             if (!passwordValid)
-                return Result<AuthenticationResponse>.Failure("Invalid email or password");
+                return Result<AuthenticationResponse>.Failure("Invalid email or password", ErrorType.Unauthorized);
 
             var roles = await _users.GetRolesAsync(user);
             var auth = _jwt.CreateJwtToken(user.Id, user.Email!, roles);
@@ -71,17 +70,17 @@ namespace ManageDebts.Infrastructure.Auth
         public async Task<Result<AuthenticationResponse>> RefreshAsync(TokenModel model, CancellationToken ct)
         {
             var principal = _jwt.GetPrincipalFromJwtToken(model.Token);
-            if (principal is null) return Result<AuthenticationResponse>.Failure("Invalid jwt access token");
+            if (principal is null) return Result<AuthenticationResponse>.Failure("Invalid jwt access token", ErrorType.Unauthorized);
 
             var email = principal.FindFirstValue(ClaimTypes.Email);
             var user = email is null ? null : await _users.FindByEmailAsync(email);
-            if (user is null) return Result<AuthenticationResponse>.Failure("User not found");
+            if (user is null) return Result<AuthenticationResponse>.Failure("User not found", ErrorType.NotFound);
 
             if (user.RefreshTokenHash is null || user.RefreshTokenExpiresUtc is null || user.RefreshTokenExpiresUtc <= DateTime.UtcNow)
-                return Result<AuthenticationResponse>.Failure("Refresh token expired");
+                return Result<AuthenticationResponse>.Failure("Refresh token expired", ErrorType.Unauthorized);
 
             if (!VerifyRefresh(model.RefreshToken, user.RefreshTokenHash))
-                return Result<AuthenticationResponse>.Failure("Invalid refresh token");
+                return Result<AuthenticationResponse>.Failure("Invalid refresh token", ErrorType.Unauthorized);
 
             var roles = await _users.GetRolesAsync(user);
             var auth = _jwt.CreateJwtToken(user.Id, user.Email!, roles);

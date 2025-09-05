@@ -1,3 +1,4 @@
+using ManageDebts.Application.Common;
 using ManageDebts.Application.Common.Interfaces;
 using ManageDebts.Application.Debts.Commands;
 using ManageDebts.Application.Debts.Queries;
@@ -127,11 +128,22 @@ namespace ManageDebts.Presentation.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetDetail(Guid id, CancellationToken ct)
         {
-            var query = new GetDebtDetailQuery(id, GetUserId()); // incluimos el UserId
-            var dto = await _mediator.Send(query, ct);
+            var query = new GetDebtDetailQuery(id, GetUserId());
+            var result = await _mediator.Send(query, ct);
 
-            if (dto is null) return NotFound();
-            return Ok(dto);
+            if (result.IsSuccess)
+                return Ok(result.Value);
+
+            var statusCode = result.ErrorType switch
+            {
+                ErrorType.NotFound => 404,
+                ErrorType.Unauthorized => 401,
+                ErrorType.Validation => 400,
+                ErrorType.Conflict => 409,
+                _ => 500
+            };
+
+            return Problem(detail: result.Error, statusCode: statusCode);
         }
     }
 }

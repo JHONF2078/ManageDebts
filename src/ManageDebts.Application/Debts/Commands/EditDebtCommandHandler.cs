@@ -18,7 +18,7 @@ public sealed class EditDebtHandler
         if (debt is null || debt.UserId != cmd.UserId)
             throw new NotFoundException("Deuda no encontrada.");
         if (debt.IsPaid)
-            return Result<Debt>.Failure("No se puede modificar una deuda pagada.");
+            return Result<Debt>.Failure("No se puede modificar una deuda pagada.", ErrorType.Validation);
 
         debt.Amount = cmd.Amount;
         debt.Description = cmd.Description;

@@ -1,12 +1,15 @@
 using FluentValidation;
-using MediatR;
-using ManageDebts.Presentation.Filters;
 using ManageDebts.Application;
 using ManageDebts.Infrastructure;
 using ManageDebts.Infrastructure.Persistence;
-using FluentValidation;
+using ManageDebts.Presentation.Middlewares;
+using ManageDebts.Presentation.Filters;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +24,15 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers(options =>
 {
-    options.Filters.Add<GlobalExceptionFilter>();
+    options.Filters.Add<AuditActionFilter>();
 });
+
+//  Desactiva el 400 automático para que llegue a tu Handler/Result
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -59,6 +69,8 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBeh
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionMiddleware>();
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -91,3 +103,5 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+public partial class Program { }

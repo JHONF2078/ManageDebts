@@ -1,4 +1,5 @@
 // Application/Debts/Queries/GetDetail/GetDebtDetailHandler.cs
+using ManageDebts.Application.Common;
 using ManageDebts.Application.Common.Exceptions;
 using ManageDebts.Application.Common.Interfaces;
 using ManageDebts.Domain.Repositories;
@@ -7,7 +8,7 @@ using MediatR;
 namespace ManageDebts.Application.Debts.Queries.GetDetail;
 
 public sealed class GetDebtDetaiQuerylHandler
-  : IRequestHandler<GetDebtDetailQuery, DebtDto?>
+  : IRequestHandler<GetDebtDetailQuery, Result<DebtDto>>
 {
     private readonly IDebtRepository _repo;
     private readonly IUserService _users;
@@ -16,11 +17,11 @@ public sealed class GetDebtDetaiQuerylHandler
     public GetDebtDetaiQuerylHandler(IDebtRepository repo, IUserService users, ICacheService cache)
         => (_repo, _users, _cache) = (repo, users, cache);
 
-    public async Task<DebtDto?> Handle(GetDebtDetailQuery q, CancellationToken ct)
+    public async Task<Result<DebtDto>> Handle(GetDebtDetailQuery q, CancellationToken ct)
     {
         // 1) Cache
         var cached = await _cache.GetDebtDetailAsync(q.Id.ToString(), ct);
-        if (cached is not null) return cached;
+        if (cached is not null) return Result<DebtDto>.Success(cached);
 
         // 2) BD
         var debt = await _repo.GetByIdAsync(q.Id, ct);
@@ -49,6 +50,6 @@ public sealed class GetDebtDetaiQuerylHandler
 
         // 4) Cache set
         await _cache.SetDebtDetailAsync(q.Id.ToString(), dto, ct);
-        return dto;
+        return Result<DebtDto>.Success(dto);
     }
 }

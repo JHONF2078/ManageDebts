@@ -7,6 +7,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using ManageDebts.Application.Common; // Importa ErrorType
 
 namespace ManageDebts.Presentation.Controllers
 {
@@ -25,21 +26,60 @@ namespace ManageDebts.Presentation.Controllers
         public async Task<IActionResult> Register(RegisterCommand cmd, CancellationToken ct)
         {
             var result = await _mediator.Send(cmd, ct);
-            return result.IsSuccess ? Ok(result.Value) : Problem(result.Error);
+            if (result.IsSuccess)
+                return Ok(result.Value);
+
+            var statusCode = result.ErrorType switch
+            {
+                ErrorType.Unauthorized => 401,
+                ErrorType.NotFound => 404,
+                ErrorType.Validation => 400,
+                ErrorType.Conflict => 409,
+                _ => 500
+            };
+
+            //if (!result.IsSuccess)
+            //return BadRequest(new { error = result.Error, type = result.ErrorType });
+            //Problem  formato estándar para errores HTTP
+            return Problem(detail: result.Error, statusCode: statusCode);
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginCommand cmd, CancellationToken ct)
         {
             var result = await _mediator.Send(cmd, ct);
-            return result.IsSuccess ? Ok(result.Value) : Problem(result.Error);
+            if (result.IsSuccess)
+                return Ok(result.Value);
+
+            var statusCode = result.ErrorType switch
+            {
+                ErrorType.Unauthorized => 401,
+                ErrorType.NotFound => 404,
+                ErrorType.Validation => 400,
+                ErrorType.Conflict => 409,
+                _ => 500
+            };
+
+            return Problem(detail: result.Error, statusCode: statusCode);
         }
 
         [HttpPost("generate-new-jwt-token")]
         public async Task<IActionResult> Refresh(TokenModel model, CancellationToken ct)
         {
             var result = await _auth.RefreshAsync(model, ct);
-            return result.IsSuccess ? Ok(result.Value) : Problem(result.Error);
+            if (result.IsSuccess)
+                return Ok(result.Value);
+
+            var statusCode = result.ErrorType switch
+            {
+                ErrorType.Unauthorized => 401,
+                ErrorType.NotFound => 404,
+                ErrorType.Validation => 400,
+                ErrorType.Conflict => 409,
+                _ => 500
+            };
+
+            return Problem(detail: result.Error, statusCode: statusCode);
         }
 
         [Authorize]
